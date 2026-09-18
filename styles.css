@@ -58,7 +58,8 @@ a {
 .logo-mark {
   height: 24px;
   width: 24px;
-  fill: var(--color-paper);
+  object-fit: contain;
+  mix-blend-mode: screen;
   transition: transform 0.3s ease;
 }
 
