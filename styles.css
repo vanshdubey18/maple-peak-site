@@ -537,8 +537,9 @@ a {
   }
 
   .hero {
-    padding-top: 60px;
+    padding-top: 24px;
     padding-bottom: 80px;
+    gap: 28px;
   }
 
   .hero-row {
