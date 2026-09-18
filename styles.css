@@ -483,6 +483,19 @@ a {
 
 /* Responsive */
 @media (max-width: 640px) {
+  .hero-proof {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .hero-proof span {
+    padding-left: 0;
+  }
+
+  .hero-proof span::before {
+    content: none;
+  }
+
   .about {
     grid-template-columns: 1fr;
     padding-top: 80px;
