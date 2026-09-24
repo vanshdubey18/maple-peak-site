@@ -29,11 +29,17 @@ body {
   margin: 0;
   font-family: var(--font-sans);
   color: var(--color-dark);
+  background: var(--color-paper);
 }
 
 a {
   color: inherit;
   text-decoration: none;
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 3px;
 }
 
 /* Header */
@@ -359,12 +365,158 @@ a {
   margin: 0;
 }
 
+/* Cost calculator */
+.cost {
+  background: var(--color-paper);
+  padding: var(--section-padding-y) var(--section-padding-x);
+}
+
+.cost-inner {
+  max-width: 1280px;
+  margin: 0 auto;
+}
+
+.cost-intro {
+  max-width: 640px;
+  margin-bottom: 48px;
+}
+
+.cost-intro .section-headline {
+  margin: 20px 0;
+}
+
+.cost-panel {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  border: 1px solid var(--color-border-light);
+}
+
+.cost-inputs {
+  padding: 40px;
+  display: flex;
+  flex-direction: column;
+  gap: 36px;
+}
+
+.cost-label-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 16px;
+  margin-bottom: 14px;
+}
+
+.cost-label-row label {
+  font-size: 15px;
+  line-height: 1.4;
+  color: var(--color-muted-light-section);
+}
+
+.cost-label-row output {
+  font-family: var(--font-headline);
+  font-size: 26px;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.cost-field input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 24px;
+  margin: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+.cost-field input[type="range"]::-webkit-slider-runnable-track {
+  height: 2px;
+  background: linear-gradient(to right, var(--color-accent) var(--fill, 50%), var(--color-border-light) var(--fill, 50%));
+}
+
+.cost-field input[type="range"]::-moz-range-track {
+  height: 2px;
+  background: var(--color-border-light);
+}
+
+.cost-field input[type="range"]::-moz-range-progress {
+  height: 2px;
+  background: var(--color-accent);
+}
+
+.cost-field input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 18px;
+  height: 18px;
+  margin-top: -8px;
+  background: var(--color-dark);
+  border: 2px solid var(--color-paper);
+  box-shadow: 0 0 0 1px var(--color-dark);
+  transition: transform 0.15s ease;
+}
+
+.cost-field input[type="range"]::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border-radius: 0;
+  background: var(--color-dark);
+  border: 2px solid var(--color-paper);
+  box-shadow: 0 0 0 1px var(--color-dark);
+}
+
+.cost-field input[type="range"]:active::-webkit-slider-thumb {
+  transform: scale(1.2);
+}
+
+.cost-result {
+  background: var(--color-dark);
+  color: var(--color-paper);
+  padding: 40px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.cost-result-label {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--color-muted-dark-section);
+}
+
+.cost-result-value {
+  font-family: var(--font-hero);
+  font-size: clamp(48px, 6vw, 84px);
+  line-height: 1;
+  letter-spacing: -1px;
+  font-variant-numeric: tabular-nums;
+}
+
+.cost-result-hours {
+  font-size: 14px;
+  color: var(--color-muted-dark-section);
+  font-variant-numeric: tabular-nums;
+}
+
+.cost-result-note {
+  font-size: 16px;
+  line-height: 1.7;
+  color: var(--color-hero-copy);
+  margin: 20px 0 16px;
+  padding-top: 20px;
+  border-top: 1px solid var(--color-border-dark);
+  max-width: 440px;
+}
+
 /* FAQ */
 .faq {
   background: var(--color-paper);
   padding: var(--section-padding-y) var(--section-padding-x);
   max-width: 800px;
   margin: 0 auto;
+  border-top: 1px solid var(--color-border-light);
 }
 
 .faq-list {
@@ -481,6 +633,12 @@ a {
   }
 }
 
+@media (max-width: 900px) {
+  .cost-panel {
+    grid-template-columns: 1fr;
+  }
+}
+
 /* Responsive */
 @media (max-width: 640px) {
   .hero-proof {
@@ -524,6 +682,29 @@ a {
   .services {
     padding-top: 80px;
     padding-bottom: 80px;
+  }
+
+  .cost {
+    padding-top: 80px;
+    padding-bottom: 80px;
+  }
+
+  .cost-intro {
+    margin-bottom: 32px;
+  }
+
+  .cost-panel {
+    grid-template-columns: 1fr;
+  }
+
+  .cost-inputs,
+  .cost-result {
+    padding: 28px 20px;
+  }
+
+  .cost-result .btn {
+    width: 100%;
+    text-align: center;
   }
 
   .faq {

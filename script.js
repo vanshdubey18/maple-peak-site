@@ -24,14 +24,82 @@
     }, 2500);
   }
 
+  var params = new URLSearchParams(window.location.search);
+  var utmSource = params.get('utm_source') ||
+    (/instagram\./i.test(document.referrer) ? 'instagram' : '');
+  var utmCampaign = params.get('utm_campaign') || '';
+  document.querySelectorAll('a[href^="https://tally.so/r/"]').forEach(function (link) {
+    var url = new URL(link.href);
+    url.searchParams.set('source', link.dataset.cta || 'site');
+    if (utmSource) url.searchParams.set('utm_source', utmSource);
+    if (utmCampaign) url.searchParams.set('utm_campaign', utmCampaign);
+    link.href = url.toString();
+  });
+
+  var costHours = document.getElementById('costHours');
+  var costPeople = document.getElementById('costPeople');
+  var costRate = document.getElementById('costRate');
+  var costTotal = document.getElementById('costTotal');
+  if (costHours && costPeople && costRate && costTotal) {
+    var WORKING_WEEKS = 48;
+    var money = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 });
+    var count = new Intl.NumberFormat('en-US');
+    var shownTotal = 0;
+    var tweenFrame = null;
+
+    var setFill = function (input) {
+      var pct = (input.value - input.min) / (input.max - input.min) * 100;
+      input.style.setProperty('--fill', pct + '%');
+    };
+
+    var renderTotal = function (target) {
+      if (tweenFrame) cancelAnimationFrame(tweenFrame);
+      if (reduceMotion) {
+        shownTotal = target;
+        costTotal.textContent = money.format(target);
+        return;
+      }
+      var start = shownTotal;
+      var startTime = null;
+      var step = function (now) {
+        if (startTime === null) startTime = now;
+        var t = Math.min((now - startTime) / 300, 1);
+        var eased = 1 - Math.pow(1 - t, 3);
+        shownTotal = start + (target - start) * eased;
+        costTotal.textContent = money.format(Math.round(shownTotal));
+        if (t < 1) tweenFrame = requestAnimationFrame(step);
+      };
+      tweenFrame = requestAnimationFrame(step);
+    };
+
+    var updateCost = function () {
+      var hours = +costHours.value;
+      var people = +costPeople.value;
+      var rate = +costRate.value;
+      var annualHours = hours * people * WORKING_WEEKS;
+      document.getElementById('costHoursOut').textContent = hours;
+      document.getElementById('costPeopleOut').textContent = people;
+      document.getElementById('costRateOut').textContent = money.format(rate);
+      document.getElementById('costAnnualHours').textContent = count.format(annualHours);
+      [costHours, costPeople, costRate].forEach(setFill);
+      renderTotal(annualHours * rate);
+    };
+
+    [costHours, costPeople, costRate].forEach(function (input) {
+      input.addEventListener('input', updateCost);
+    });
+    shownTotal = +costHours.value * +costPeople.value * WORKING_WEEKS * +costRate.value;
+    updateCost();
+  }
+
   var hero = document.querySelector('.hero');
-  var contact = document.getElementById('contact');
   var stickyCta = document.getElementById('stickyCta');
-  if (hero && contact && stickyCta && 'IntersectionObserver' in window) {
+  var inPageCtaZones = document.querySelectorAll('.cost-result, #contact');
+  if (hero && stickyCta && 'IntersectionObserver' in window) {
     var pastHero = false;
-    var atContact = false;
+    var visibleCtaZones = new Set();
     var updateStickyCta = function () {
-      stickyCta.classList.toggle('is-visible', pastHero && !atContact);
+      stickyCta.classList.toggle('is-visible', pastHero && visibleCtaZones.size === 0);
     };
     new IntersectionObserver(function (entries) {
       entries.forEach(function (entry) {
@@ -39,11 +107,13 @@
       });
       updateStickyCta();
     }, { threshold: 0 }).observe(hero);
-    new IntersectionObserver(function (entries) {
+    var ctaZoneObserver = new IntersectionObserver(function (entries) {
       entries.forEach(function (entry) {
-        atContact = entry.isIntersecting;
+        if (entry.isIntersecting) visibleCtaZones.add(entry.target);
+        else visibleCtaZones.delete(entry.target);
       });
       updateStickyCta();
-    }, { threshold: 0 }).observe(contact);
+    }, { threshold: 0 });
+    inPageCtaZones.forEach(function (zone) { ctaZoneObserver.observe(zone); });
   }
 })();
