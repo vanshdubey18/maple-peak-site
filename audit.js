@@ -2,6 +2,7 @@
   'use strict';
 
   var TALLY_FORM_ID = 'PdKloe';
+  var SAVED_KEY = 'mp-audit-report';
   var GUIDE_URL = 'https://tally.so/r/Me0N8k?source=audit';
   var CONTACT_URL = 'https://instagram.com/vanshdubeyy';
   var HOURS_PER_PERSON_YEAR = 1920;
@@ -964,6 +965,7 @@
 
   function openUnlock() {
     var fields = hiddenFields(computeResults());
+    try { localStorage.setItem(SAVED_KEY, JSON.stringify({ report: fields.report, at: Date.now() })); } catch (e) {}
     if (window.Tally && typeof window.Tally.openPopup === 'function') {
       window.Tally.openPopup(TALLY_FORM_ID, {
         layout: 'modal',
@@ -997,7 +999,26 @@
     if (data && data.event === 'Tally.FormSubmitted') unlockReport();
   });
 
-  if (params.get('report') && restoreState(params.get('report'))) {
+  // Tally redirects to ?unlocked=1&report=... after the form. If the report
+  // value didn't come through, fall back to the copy saved on this device.
+  function savedReport() {
+    try {
+      var saved = JSON.parse(localStorage.getItem(SAVED_KEY) || 'null');
+      if (saved && saved.report && Date.now() - saved.at < 7 * 24 * 3600 * 1000) return saved.report;
+    } catch (e) {}
+    return null;
+  }
+
+  var packed = params.get('report');
+  var restored = !!packed && restoreState(packed);
+  if (!restored && params.get('unlocked')) {
+    packed = savedReport();
+    restored = !!packed && restoreState(packed);
+    if (restored) {
+      try { history.replaceState(null, '', window.location.pathname + '?report=' + packed); } catch (e) {}
+    }
+  }
+  if (restored) {
     unlocked = true;
     renderResults(true);
   } else {
