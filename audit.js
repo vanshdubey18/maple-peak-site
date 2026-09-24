@@ -935,8 +935,31 @@
       timeline: [(findById(TIMELINE, state.timeline) || {}).label, (findById(DECIDER, state.decider) || {}).label].filter(Boolean).join(' / '),
       source: 'audit-' + utm.source,
       utm_source: utm.utm_source,
-      utm_campaign: utm.utm_campaign
+      utm_campaign: utm.utm_campaign,
+      report: packState()
     };
+  }
+
+  // The answers travel through Tally's redirect, so the full report opens
+  // on the audit page even when the form ran in a new tab.
+  function packState() {
+    var json = JSON.stringify(state);
+    return btoa(unescape(encodeURIComponent(json))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+  }
+
+  function restoreState(packed) {
+    var before = JSON.stringify(state);
+    try {
+      var b64 = packed.replace(/-/g, '+').replace(/_/g, '/');
+      var saved = JSON.parse(decodeURIComponent(escape(atob(b64))));
+      if (!saved || typeof saved !== 'object' || !REGIONS[saved.country]) return false;
+      Object.keys(state).forEach(function (k) { if (k in saved) state[k] = saved[k]; });
+      computeResults();
+      return true;
+    } catch (e) {
+      state = JSON.parse(before);
+      return false;
+    }
   }
 
   function openUnlock() {
@@ -974,5 +997,10 @@
     if (data && data.event === 'Tally.FormSubmitted') unlockReport();
   });
 
-  render();
+  if (params.get('report') && restoreState(params.get('report'))) {
+    unlocked = true;
+    renderResults(true);
+  } else {
+    render();
+  }
 })();
