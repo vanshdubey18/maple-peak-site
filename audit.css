@@ -181,6 +181,136 @@
   color: var(--color-paper);
 }
 
+.audit-steptag {
+  display: inline-block;
+  margin-left: 12px;
+  padding: 3px 8px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  color: var(--color-accent);
+  border: 1px solid var(--color-accent);
+}
+
+.audit-score-row .audit-options.is-compact {
+  grid-template-columns: repeat(2, minmax(0, 120px));
+}
+
+.audit-score-row + .audit-score-row {
+  margin-top: 22px;
+}
+
+/* First job */
+.audit-first {
+  border: 1px solid var(--color-dark);
+  padding: 32px;
+  margin-bottom: 8px;
+}
+
+.audit-first-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.audit-first .audit-summary-label {
+  color: var(--color-muted-light-section);
+}
+
+.audit-verdict {
+  font-size: 13px;
+  font-weight: 700;
+  padding: 6px 10px;
+  background: var(--color-accent);
+  color: var(--color-paper);
+}
+
+.audit-first-title {
+  font-family: var(--font-headline);
+  font-size: clamp(26px, 4vw, 36px);
+  font-weight: 400;
+  line-height: 1.15;
+  margin: 14px 0 10px;
+  text-wrap: balance;
+}
+
+.audit-first-line {
+  font-size: 16px;
+  line-height: 1.7;
+  color: var(--color-muted-light-section);
+  margin: 0 0 22px;
+}
+
+.audit-first-steps {
+  margin: 0;
+  border-top: 1px solid var(--color-border-light);
+}
+
+.audit-first-steps div {
+  display: grid;
+  grid-template-columns: 90px 1fr;
+  gap: 16px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--color-border-light);
+}
+
+.audit-first-steps dt {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: var(--color-accent);
+}
+
+.audit-first-steps dd {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.6;
+}
+
+.audit-first-build {
+  background: var(--color-dark);
+  color: var(--color-paper);
+  padding: 24px;
+  margin-top: 24px;
+}
+
+.audit-first-build .audit-summary-label {
+  color: var(--color-muted-dark-section);
+}
+
+.audit-first-build h3 {
+  font-family: var(--font-headline);
+  font-size: 22px;
+  font-weight: 400;
+  margin: 8px 0;
+}
+
+.audit-first-build p {
+  font-size: 15px;
+  line-height: 1.7;
+  color: var(--color-hero-copy);
+  margin: 0 0 16px;
+}
+
+.audit-first-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 24px;
+  font-family: var(--font-headline);
+  font-size: 20px;
+  font-variant-numeric: tabular-nums;
+}
+
+.audit-first-meta span + span {
+  font-family: var(--font-sans);
+  font-size: 14px;
+  color: var(--color-muted-dark-section);
+  align-self: center;
+}
+
 /* Intro */
 .audit-intro-points {
   list-style: none;
@@ -529,8 +659,22 @@
 
   .audit-summary,
   .audit-next-steps,
-  .audit-locked {
+  .audit-locked,
+  .audit-first {
     padding: 24px 20px;
+  }
+
+  .audit-first-build {
+    padding: 20px;
+  }
+
+  .audit-first-steps div {
+    grid-template-columns: 1fr;
+    gap: 4px;
+  }
+
+  .audit-steptag {
+    margin-left: 8px;
   }
 
   .audit-nav .btn,

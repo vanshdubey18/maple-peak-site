@@ -2,9 +2,10 @@
   'use strict';
 
   var TALLY_FORM_ID = 'PdKloe';
-  var POINT_FIRST_URL = 'https://tally.so/r/Me0N8k?source=audit';
+  var GUIDE_URL = 'https://tally.so/r/Me0N8k?source=audit';
   var CONTACT_URL = 'https://instagram.com/vanshdubeyy';
   var HOURS_PER_PERSON_YEAR = 1920;
+  var WORKING_WEEKS = 48;
 
   var app = document.getElementById('auditApp');
   var progressFill = document.getElementById('auditProgress');
@@ -75,23 +76,16 @@
     { id: 'p6', label: '50+', v: 50 }
   ];
 
+  // share = part of the whole team's time the automations in this area could take over (conservative)
   var AREAS = {
-    finance: { label: 'Finance & accounts', hint: 'Invoices, payments, collections', share: [0.25, 0.40],
-      volLabel: 'Supplier + customer invoices a month', vol: ['Under 200', '200–1,000', '1,000–5,000', '5,000+'] },
-    sales: { label: 'Sales & enquiries', hint: 'Leads, quotes, follow-ups', share: [0.15, 0.30],
-      volLabel: 'Enquiries a month', vol: ['Under 100', '100–500', '500–2,000', '2,000+'] },
-    orders: { label: 'Orders & customer service', hint: 'Order entry, status, support', share: [0.25, 0.40],
-      volLabel: 'Customer orders a month', vol: ['Under 200', '200–1,000', '1,000–5,000', '5,000+'] },
-    procurement: { label: 'Procurement & vendors', hint: 'POs, approvals, supplier follow-ups', share: [0.20, 0.35],
-      volLabel: 'Purchase orders a month', vol: ['Under 100', '100–500', '500–2,000', '2,000+'] },
-    dealers: { label: 'Dealers & distributors', hint: 'Dealer orders, schemes, claims', share: [0.20, 0.35],
-      volLabel: 'Active dealers or distributors', vol: ['Under 50', '50–200', '200–1,000', '1,000+'] },
-    hr: { label: 'HR & people', hint: 'Hiring, onboarding, staff queries', share: [0.15, 0.30],
-      volLabel: 'Total employees', vol: ['Under 200', '200–500', '500–2,000', '2,000+'] },
-    reporting: { label: 'Management reporting', hint: 'MIS, month-end close, dashboards', share: [0.30, 0.50],
-      volLabel: 'Branches, plants or entities', vol: ['1–2', '3–5', '6–15', '15+'] },
-    compliance: { label: 'Tax & compliance', labelIN: 'GST & statutory compliance', hint: 'Filings, reconciliations, deadlines', share: [0.20, 0.35],
-      volLabel: 'Tax registrations or entities', volLabelIN: 'GST registrations (GSTINs)', vol: ['1', '2–5', '6–15', '15+'] }
+    finance: { label: 'Finance & accounts', hint: 'Invoices, payments, collections', share: [0.25, 0.40] },
+    sales: { label: 'Sales & enquiries', hint: 'Leads, quotes, follow-ups', share: [0.15, 0.30] },
+    orders: { label: 'Orders & customer service', hint: 'Order entry, status, support', share: [0.25, 0.40] },
+    procurement: { label: 'Procurement & vendors', hint: 'POs, approvals, supplier follow-ups', share: [0.20, 0.35] },
+    dealers: { label: 'Dealers & distributors', hint: 'Dealer orders, schemes, claims', share: [0.20, 0.35] },
+    hr: { label: 'HR & people', hint: 'Hiring, onboarding, staff queries', share: [0.15, 0.30] },
+    reporting: { label: 'Management reporting', hint: 'MIS, month-end close, dashboards', share: [0.30, 0.50] },
+    compliance: { label: 'Tax & compliance', labelIN: 'GST & statutory compliance', hint: 'Filings, reconciliations, deadlines', share: [0.20, 0.35] }
   };
   var AREA_ORDER = ['finance', 'sales', 'orders', 'procurement', 'dealers', 'hr', 'reporting', 'compliance'];
 
@@ -102,21 +96,50 @@
     { id: 's4', label: 'Next day or later', slow: true }
   ];
 
+  var WHY_REASONS = [
+    { id: 'w1', label: 'The information is already in emails, PDFs or messages', kind: 'ai' },
+    { id: 'w2', label: 'Our systems don\'t talk to each other, so data gets re-typed', kind: 'ai' },
+    { id: 'w3', label: 'Volume keeps growing faster than the team', kind: 'ai' },
+    { id: 'w4', label: 'Customers or staff can\'t see the status themselves', kind: 'ai' },
+    { id: 'w5', label: 'It needs a judgement call every time', kind: 'front' },
+    { id: 'w6', label: 'Everyone does it a slightly different way', kind: 'setup' },
+    { id: 'w7', label: 'Only one or two people know how it\'s done', kind: 'setup' }
+  ];
+
+  var SCORE_QUESTIONS = [
+    'Does it happen every day or every week?',
+    'Is it mostly the same steps each time?',
+    'Is the information already somewhere: a system, sheet, inbox or website?',
+    'Is a person doing work a machine could take?',
+    'If it were handled, would you get time or money back this month?'
+  ];
+
+  var CHECK_HOURS = [
+    { id: 'h1', label: 'Under 5 hours', v: [2, 5] },
+    { id: 'h2', label: '5–15 hours', v: [5, 15] },
+    { id: 'h3', label: '15–40 hours', v: [15, 40] },
+    { id: 'h4', label: '40–100 hours', v: [40, 100] },
+    { id: 'h5', label: '100+ hours', v: [100, 100] }
+  ];
+
+  // Verdicts and wording follow the Point First guide.
+  var VERDICTS = {
+    needs_ai: { label: 'Needs AI', share: [0.5, 0.7],
+      line: 'Same job, same steps, and the information already exists. A person shouldn\'t keep doing this by hand.' },
+    ai_front: { label: 'Needs a person, with AI in front', share: [0.3, 0.5],
+      line: 'A person still makes the final call. AI should do the first part: find it, sort it, draft it, remind and follow up.' },
+    setup_first: { label: 'Needs setup, then AI', share: [0.25, 0.4],
+      line: 'The job is slow, but the steps are messy or live in someone\'s head. Write the steps down first, then it needs AI too.' },
+    person: { label: 'Mostly a person\'s job for now', share: [0.15, 0.3],
+      line: 'It scored under 3 of 5. Keep it with a person, but AI can still sort, draft and remind.' }
+  };
+
   var DAYS_TO_PAY = [
     { id: 'd1', label: 'Under 30 days', faster: [3, 7] },
     { id: 'd2', label: '30–60 days', faster: [7, 15] },
     { id: 'd3', label: '60–90 days', faster: [15, 25] },
     { id: 'd4', label: '90+ days', faster: [20, 35] },
     { id: 'dx', label: 'Not sure', faster: [7, 15] }
-  ];
-
-  var GOALS = [
-    { id: 'time', label: 'Free up my team\'s time' },
-    { id: 'cash', label: 'Get paid faster' },
-    { id: 'revenue', label: 'Convert more enquiries' },
-    { id: 'risk', label: 'Fewer errors and compliance risk' },
-    { id: 'scale', label: 'Grow without adding headcount' },
-    { id: 'visibility', label: 'Better visibility for management' }
   ];
 
   var TIMELINE = [
@@ -132,97 +155,122 @@
     { id: 'k4', label: 'Not sure yet' }
   ];
 
-  // value types: time, cash, risk, revenue. goal = goals this directly serves.
+  // job = how an owner names the manual work (Point step). types: time, cash, risk, revenue.
   var CATALOGUE = [
-    { id: 'ap_capture', area: 'finance', w: 3, weeks: '3–6 weeks', types: ['time'], goals: ['time', 'scale', 'risk'],
+    { id: 'ap_capture', area: 'finance', w: 3, weeks: '3–6 weeks', types: ['time'],
+      job: 'Typing supplier invoices into the system',
       title: 'Supplier invoice capture and three-way match',
       what: 'Reads supplier invoices from email or PDF, checks each against the PO and goods receipt, and posts matched ones into {erp}. People only handle the exceptions.' },
-    { id: 'collections', area: 'finance', w: 3, weeks: '2–4 weeks', types: ['time', 'cash'], goals: ['cash', 'time'],
+    { id: 'collections', area: 'finance', w: 3, weeks: '2–4 weeks', types: ['time', 'cash'],
+      job: 'Chasing customers for payment',
       title: 'Collections on autopilot',
       what: 'Sends each customer reminders matched to their terms and payment history, shares statements, and tracks promised payment dates. Your team only calls the hard cases.' },
-    { id: 'cash_app', area: 'finance', w: 2, weeks: '2–4 weeks', types: ['time', 'cash'], goals: ['cash', 'time'],
+    { id: 'cash_app', area: 'finance', w: 2, weeks: '2–4 weeks', types: ['time', 'cash'],
+      job: 'Matching incoming payments to invoices',
       title: 'Matching incoming payments to invoices',
       whatIN: 'Matches incoming NEFT, RTGS and UPI receipts to open invoices and posts them in {erp}, so outstanding balances are always current.',
       whatUS: 'Matches incoming ACH, wire, check and card payments to open invoices and posts them in {erp}, so outstanding balances are always current.' },
-    { id: 'vendor_onboard', area: 'finance', w: 1, weeks: '2–3 weeks', types: ['time', 'risk'], goals: ['risk', 'time'],
+    { id: 'vendor_onboard', area: 'finance', w: 1, weeks: '2–3 weeks', types: ['time', 'risk'],
+      job: 'Setting up and checking new suppliers',
       title: 'New supplier setup and checks',
       whatIN: 'Collects supplier documents and validates GSTIN, PAN, bank details and MSME status before a vendor goes live.',
       whatUS: 'Collects W-9, banking and insurance details from new suppliers and validates them before a vendor goes live.' },
-    { id: 'msme45', area: 'finance', region: 'IN', w: 1, weeks: '1–2 weeks', types: ['risk'], goals: ['risk'],
-      title: 'MSME 45-day payment tracker',
-      whatIN: 'Flags invoices from micro and small suppliers as they approach 45 days, so late payments don\'t cost you the tax deduction.' },
-    { id: 'ledger_recon', area: 'finance', w: 1, weeks: '2–3 weeks', types: ['time'], goals: ['time', 'risk'],
+    { id: 'ledger_recon', area: 'finance', w: 1, weeks: '2–3 weeks', types: ['time'],
+      job: 'Reconciling customer ledgers',
       title: 'Customer ledger reconciliation',
       what: 'Prepares balance confirmations and flags mismatches between your books and customer statements before they turn into disputes.' },
+    { id: 'msme45', area: 'finance', region: 'IN', w: 1, weeks: '1–2 weeks', types: ['risk'],
+      title: 'MSME 45-day payment tracker',
+      whatIN: 'Flags invoices from micro and small suppliers as they approach 45 days, so late payments don\'t cost you the tax deduction.' },
 
-    { id: 'speed_lead', area: 'sales', w: 3, weeks: '2–4 weeks', types: ['revenue', 'time'], goals: ['revenue', 'scale'],
+    { id: 'speed_lead', area: 'sales', w: 3, weeks: '2–4 weeks', types: ['revenue', 'time'],
+      job: 'First reply to new enquiries',
       title: 'Instant reply and routing for every enquiry',
       whatIN: 'Replies within a minute to enquiries from your website, IndiaMART and WhatsApp, qualifies them, and routes each one to the right salesperson.',
       whatUS: 'Replies within a minute to web forms, ad leads and emails, qualifies them, and routes each one to the right rep.' },
-    { id: 'quotes', area: 'sales', w: 2, weeks: '3–5 weeks', types: ['time', 'revenue'], goals: ['revenue', 'time'],
+    { id: 'quotes', area: 'sales', w: 2, weeks: '3–5 weeks', types: ['time', 'revenue'],
+      job: 'Writing quotes, proposals and tenders',
       title: 'Quote, proposal and tender drafting',
       what: 'Drafts quotes, proposals and tender or RFP responses from your past documents and price lists, ready for your team to review.' },
-    { id: 'crm_log', area: 'sales', w: 1, weeks: '2–3 weeks', types: ['time'], goals: ['visibility', 'time'],
+    { id: 'crm_log', area: 'sales', w: 1, weeks: '2–3 weeks', types: ['time'],
+      job: 'Updating the CRM after calls and emails',
       title: 'A CRM that updates itself',
       what: 'Logs calls, emails and messages into {crm} automatically and reminds reps of their next step, so the pipeline is always accurate.' },
 
-    { id: 'po_to_so', area: 'orders', w: 3, weeks: '3–5 weeks', types: ['time', 'risk'], goals: ['time', 'scale', 'risk'],
+    { id: 'po_to_so', area: 'orders', w: 3, weeks: '3–5 weeks', types: ['time', 'risk'],
+      job: 'Entering customer POs as sales orders',
       title: 'Customer POs straight into {erp}',
       whatIN: 'Reads purchase orders from email, PDF or WhatsApp, creates the sales order in {erp}, and checks credit limits before it\'s confirmed.',
       whatUS: 'Reads purchase orders from email, PDF or portals, creates the sales order in {erp}, and checks credit limits before it\'s confirmed.' },
-    { id: 'support_ai', area: 'orders', w: 2, weeks: '3–5 weeks', types: ['time'], goals: ['time', 'scale'],
+    { id: 'support_ai', area: 'orders', w: 2, weeks: '3–5 weeks', types: ['time'],
+      job: 'Answering the same customer questions',
       title: 'Customer service assistant',
       whatIN: 'Answers routine customer questions in English and Hindi, sorts tickets, and hands the rest to your team with full context.',
       whatUS: 'Answers routine customer questions, sorts tickets, and hands the rest to your team with full context.' },
-    { id: 'order_updates', area: 'orders', w: 1, weeks: '1–3 weeks', types: ['time'], goals: ['time'],
+    { id: 'order_updates', area: 'orders', w: 1, weeks: '1–3 weeks', types: ['time'],
+      job: 'Giving order and dispatch updates',
       title: 'Automatic order and dispatch updates',
       what: 'Tells customers when orders are confirmed, dispatched and delivered, cutting the "where is my order?" calls.' },
 
-    { id: 'po_approvals', area: 'procurement', w: 2, weeks: '2–4 weeks', types: ['time'], goals: ['time', 'visibility'],
+    { id: 'po_approvals', area: 'procurement', w: 2, weeks: '2–4 weeks', types: ['time'],
+      job: 'Chasing PO approvals and supplier deliveries',
       title: 'PO approvals and supplier follow-ups',
       what: 'Routes purchase requests to the right approver and chases suppliers on delivery dates automatically.' },
-    { id: 'contracts', area: 'procurement', w: 1, weeks: '3–5 weeks', types: ['risk'], goals: ['risk'],
+    { id: 'contracts', area: 'procurement', w: 1, weeks: '3–5 weeks', types: ['risk'],
+      job: 'Tracking contract terms and renewals',
       title: 'Contract review and renewal alerts',
       what: 'Pulls key terms, obligations and renewal dates out of contracts and alerts you before anything lapses or auto-renews.' },
 
-    { id: 'dealer_orders', area: 'dealers', w: 3, weeks: '3–5 weeks', types: ['time'], goals: ['time', 'scale'],
+    { id: 'dealer_orders', area: 'dealers', w: 3, weeks: '3–5 weeks', types: ['time'],
+      job: 'Entering dealer orders',
       title: 'Dealer orders straight into {erp}',
       whatIN: 'Lets dealers place orders on WhatsApp and creates them in {erp} without anyone re-typing them.',
       whatUS: 'Lets dealers place orders by email or portal and creates them in {erp} without anyone re-typing them.' },
-    { id: 'claims', area: 'dealers', w: 2, weeks: '3–6 weeks', types: ['time', 'risk'], goals: ['risk', 'cash'],
+    { id: 'claims', area: 'dealers', w: 2, weeks: '3–6 weeks', types: ['time', 'risk'],
+      job: 'Checking scheme and claim requests',
       title: 'Scheme and claim processing',
       what: 'Checks dealer claims against scheme rules and actual sales, flags leakage, and prepares approvals.' },
-    { id: 'secondary', area: 'dealers', w: 1, weeks: '2–4 weeks', types: ['time'], goals: ['visibility'],
+    { id: 'secondary', area: 'dealers', w: 1, weeks: '2–4 weeks', types: ['time'],
+      job: 'Collecting distributor stock and sales reports',
       title: 'Distributor stock and sales reporting',
       what: 'Collects distributor stock and sell-through data automatically and turns it into one weekly view.' },
 
-    { id: 'hiring', area: 'hr', w: 2, weeks: '2–4 weeks', types: ['time'], goals: ['time', 'scale'],
+    { id: 'hiring', area: 'hr', w: 2, weeks: '2–4 weeks', types: ['time'],
+      job: 'Screening candidates and scheduling interviews',
       title: 'Candidate screening and interview scheduling',
       what: 'Screens applications against the role, shortlists the strongest, and books interviews without the email back-and-forth.' },
-    { id: 'hr_help', area: 'hr', w: 2, weeks: '3–5 weeks', types: ['time'], goals: ['time', 'scale'],
+    { id: 'hr_help', area: 'hr', w: 2, weeks: '3–5 weeks', types: ['time'],
+      job: 'Onboarding joiners and answering HR questions',
       title: 'Onboarding and HR helpdesk',
       what: 'Runs new-joiner paperwork and answers staff questions on policies, leave and payslips.' },
-    { id: 'knowledge', area: 'hr', w: 1, weeks: '3–5 weeks', types: ['time'], goals: ['scale', 'time'],
+    { id: 'knowledge', area: 'hr', w: 1, weeks: '3–5 weeks', types: ['time'],
+      job: 'Answering "how do we do this?" questions',
       title: 'Internal knowledge assistant',
       what: 'Answers staff questions instantly from your SOPs, policies and contracts, so seniors stop being the help desk.' },
 
-    { id: 'mis', area: 'reporting', w: 3, weeks: '3–6 weeks', types: ['time'], goals: ['visibility', 'time'],
+    { id: 'mis', area: 'reporting', w: 3, weeks: '3–6 weeks', types: ['time'],
+      job: 'Building MIS and management reports',
       title: 'One management view across every branch',
       what: 'Pulls numbers from {erp}, {crm} and spreadsheets into a daily summary and a consolidated MIS across every branch and plant.' },
-    { id: 'close', area: 'reporting', w: 2, weeks: '4–8 weeks', types: ['time', 'risk'], goals: ['visibility', 'time'],
+    { id: 'close', area: 'reporting', w: 2, weeks: '4–8 weeks', types: ['time', 'risk'],
+      job: 'Closing the books each month',
       title: 'Faster month-end close',
       what: 'Automates reconciliations and the close checklist so the books close in days, not weeks.' },
 
-    { id: 'gstr2b', area: 'compliance', region: 'IN', w: 3, weeks: '3–5 weeks', types: ['time', 'risk'], goals: ['risk', 'cash'],
+    { id: 'gstr2b', area: 'compliance', region: 'IN', w: 3, weeks: '3–5 weeks', types: ['time', 'risk'],
+      job: 'Matching GSTR-2B with purchase records',
       title: 'GST input-credit matching',
       whatIN: 'Matches GSTR-2B against your purchase register every month and chases suppliers for missing filings, protecting your input tax credit.' },
-    { id: 'einvoice', area: 'compliance', region: 'IN', w: 2, weeks: '1–2 weeks', types: ['risk'], goals: ['risk'],
+    { id: 'einvoice', area: 'compliance', region: 'IN', w: 2, weeks: '1–2 weeks', types: ['risk'],
+      job: 'Tracking e-invoice deadlines',
       title: 'E-invoice 30-day monitor',
       whatIN: 'Watches every invoice across all your GSTINs and alerts before the 30-day IRN window closes, since a missed invoice can\'t be registered later.' },
-    { id: 'tds', area: 'compliance', region: 'IN', w: 1, weeks: '2–3 weeks', types: ['time', 'risk'], goals: ['risk', 'time'],
+    { id: 'tds', area: 'compliance', region: 'IN', w: 1, weeks: '2–3 weeks', types: ['time', 'risk'],
+      job: 'Preparing TDS and GST filings',
       title: 'Compliance calendar and filing prep',
       whatIN: 'Tracks TDS, GST and statutory due dates across entities and prepares the working files before each deadline.' },
-    { id: 'us_tax', area: 'compliance', region: 'US', w: 3, weeks: '2–4 weeks', types: ['time', 'risk'], goals: ['risk', 'time'],
+    { id: 'us_tax', area: 'compliance', region: 'US', w: 3, weeks: '2–4 weeks', types: ['time', 'risk'],
+      job: 'Preparing sales-tax and 1099 filings',
       title: 'Sales-tax and 1099 compliance prep',
       whatUS: 'Collects vendor W-9s, tracks 1099 eligibility, and prepares sales-tax working files by state before each deadline.' }
   ];
@@ -232,10 +280,11 @@
   var state = {
     country: detectCountry(),
     industry: null, revenue: null, role: null,
-    areas: [], detail: {},
-    erp: null, crm: null,
+    areas: [], people: {}, speed: null,
+    job: null, why: [], score: [null, null, null, null, null], check: null,
     owed: null, days: null,
-    goal: null, timeline: null, decider: null,
+    erp: null, crm: null,
+    timeline: null, decider: null,
     rate: null, borrow: null
   };
 
@@ -261,13 +310,34 @@
   function segment() { var r = revenueBand(); return r ? r.seg : null; }
   function areaLabel(id) { var a = AREAS[id]; return (state.country === 'IN' && a.labelIN) || a.label; }
   function findById(list, id) { for (var i = 0; i < list.length; i++) { if (list[i].id === id) return list[i]; } return null; }
+  function eligible(c) { return !c.region || c.region === state.country; }
+  function jobItem() { return findById(CATALOGUE, state.job); }
+  function peopleIn(areaId) { return (findById(PEOPLE, state.people[areaId]) || PEOPLE[0]).v; }
+  function scoreCount() { return state.score.filter(function (s) { return s === 'y'; }).length; }
+
+  function verdictId() {
+    if (scoreCount() < 3) return 'person';
+    var kinds = state.why.map(function (id) { return findById(WHY_REASONS, id).kind; });
+    if (kinds.indexOf('setup') !== -1) return 'setup_first';
+    if (kinds.indexOf('front') !== -1) return 'ai_front';
+    return 'needs_ai';
+  }
+
+  function showsMoney() {
+    return state.areas.indexOf('finance') !== -1 || ['collections', 'cash_app', 'ledger_recon'].indexOf(state.job) !== -1;
+  }
 
   // ---------- Screens ----------
 
+  var STEP_TAGS = {
+    map: 'Step 1 · Map', people: 'Step 1 · Map', point: 'Step 2 · Point', why: 'Step 3 · Why',
+    score: 'Step 4 · Score', check: 'Step 5 · Check'
+  };
+
   function buildScreens() {
-    var screens = ['intro', 'industry', 'revenue', 'role', 'areas'];
-    state.areas.forEach(function (a) { screens.push('area:' + a); });
-    screens.push('systems', 'money', 'goal', 'timeline');
+    var screens = ['intro', 'industry', 'revenue', 'role', 'map', 'people', 'point', 'why', 'score', 'check'];
+    if (showsMoney()) screens.push('money');
+    screens.push('systems', 'timeline');
     return screens;
   }
 
@@ -275,29 +345,31 @@
     var screens = buildScreens();
     var name = screens[screenIndex];
     var questionCount = screens.length - 1;
-    var progress = screenIndex === 0 ? 0 : Math.pow(screenIndex / questionCount, 0.6);
-    setProgress(progress);
+    setProgress(screenIndex === 0 ? 0 : Math.pow(screenIndex / questionCount, 0.6));
 
     var html = '';
     if (name === 'intro') html = introScreen();
     else if (name === 'industry') html = singleScreen('What kind of business do you run?', null, 'industry', INDUSTRIES.map(asOption), true);
-    else if (name === 'revenue') html = singleScreen('What is your annual revenue?', 'This decides which questions and recommendations fit your size.', 'revenue', region().revenue.map(function (r) { return { id: r.id, label: r.label }; }));
+    else if (name === 'revenue') html = singleScreen('What is your annual revenue?', 'This decides which recommendations fit your size.', 'revenue', region().revenue.map(function (r) { return { id: r.id, label: r.label }; }));
     else if (name === 'role') html = singleScreen('What is your role?', 'So the report speaks to what you own.', 'role', ROLES.map(asOption));
-    else if (name === 'areas') html = areasScreen();
-    else if (name.indexOf('area:') === 0) html = areaDetailScreen(name.slice(5));
-    else if (name === 'systems') html = systemsScreen();
+    else if (name === 'map') html = mapScreen();
+    else if (name === 'people') html = peopleScreen();
+    else if (name === 'point') html = pointScreen();
+    else if (name === 'why') html = whyScreen();
+    else if (name === 'score') html = scoreScreen();
+    else if (name === 'check') html = checkScreen();
     else if (name === 'money') html = moneyScreen();
-    else if (name === 'goal') html = singleScreen('What matters most right now?', 'Your report will be ordered around this.', 'goal', GOALS);
+    else if (name === 'systems') html = systemsScreen();
     else if (name === 'timeline') html = timelineScreen();
 
-    app.innerHTML = '<section class="audit-screen" tabindex="-1">' + stepLabel(screenIndex, questionCount) + html + '</section>';
-    bindScreen(name);
+    var tag = STEP_TAGS[name] ? '<span class="audit-steptag">' + STEP_TAGS[name] + '</span>' : '';
+    app.innerHTML = '<section class="audit-screen" tabindex="-1">' + stepLabel(screenIndex, questionCount) + tag + html + '</section>';
+    bindScreen();
     focusScreen();
   }
 
   function stepLabel(i, total) {
-    if (i === 0) return '';
-    return '<span class="audit-step">Question ' + i + ' of ' + total + '</span>';
+    return i === 0 ? '' : '<span class="audit-step">Question ' + i + ' of ' + total + '</span>';
   }
 
   function asOption(label) { return { id: label, label: label }; }
@@ -319,15 +391,22 @@
   }
 
   function introScreen() {
-    return '<h1 class="audit-title">Find what your operations can automate — and what it\'s worth.</h1>' +
-      '<p class="audit-sub">A free audit for mid-size and large businesses. Built from your answers, with the maths shown for every number.</p>' +
-      '<ul class="audit-intro-points">' +
-      '<li><strong>3</strong><span>minutes, about 10 quick taps. No typing until the end.</span></li>' +
-      '<li><strong>₹ $</strong><span>The yearly value of each automation, calculated from your team sizes and volumes.</span></li>' +
-      '<li><strong>✓</strong><span>No invented figures. Every estimate shows its working and assumptions you can change.</span></li>' +
-      '</ul>' +
+    var steps = [
+      ['Map', 'Where the manual work happens'],
+      ['Point', 'Circle the one job stealing the most hours'],
+      ['Why', 'Ask why it keeps happening, twice'],
+      ['Score', 'Five yes-or-no questions'],
+      ['Check', 'Put a number on it'],
+      ['Repeat', 'Your next jobs, ranked']
+    ];
+    return '<span class="audit-step">Free · 3–4 minutes · Taps, no typing</span>' +
+      '<h1 class="audit-title">The Point First Audit</h1>' +
+      '<p class="audit-sub">Find the first job in your company worth automating, what it\'s worth each year, and what comes next. Built on Point First, our six-step method.</p>' +
+      '<ol class="audit-intro-points">' + steps.map(function (s, i) {
+        return '<li><strong>' + (i + 1) + '</strong><span><b>' + s[0] + '.</b> ' + s[1] + '</span></li>';
+      }).join('') + '</ol>' +
       '<button type="button" class="btn btn-solid" data-action="next">Start the audit →</button>' +
-      '<p class="audit-fineprint">Nothing is saved while you answer. You only share contact details if you choose to unlock the full report.</p>';
+      '<p class="audit-fineprint">Every number is built from your answers, with the working shown. Nothing is saved while you answer.</p>';
   }
 
   function singleScreen(title, sub, key, options, withCountry) {
@@ -345,38 +424,63 @@
       }).join('') + '</div>';
   }
 
-  function areasScreen() {
+  function mapScreen() {
     var options = AREA_ORDER.map(function (id) { return { id: id, label: areaLabel(id), hint: AREAS[id].hint }; });
-    return '<h1 class="audit-title">Which areas lose the most time to manual work?</h1>' +
-      '<p class="audit-sub">Pick up to 3. We\'ll ask two quick questions about each.</p>' +
+    return '<h1 class="audit-title">Where does manual work pile up?</h1>' +
+      '<p class="audit-sub">Think about what your teams actually did yesterday, not what the process says. Pick up to 3 areas.</p>' +
       optionButtons('areas', options, state.areas, true) +
       navButtons(true, state.areas.length > 0);
   }
 
-  function areaDetailScreen(areaId) {
-    var a = AREAS[areaId];
-    var d = state.detail[areaId] || (state.detail[areaId] = {});
-    var volLabel = (state.country === 'IN' && a.volLabelIN) || a.volLabel;
-    var volOptions = a.vol.map(asOption);
-    var html = '<h1 class="audit-title">' + esc(areaLabel(areaId)) + '</h1>' +
-      '<p class="audit-sub">Rough numbers are fine.</p>' +
-      '<div class="audit-group"><span class="audit-group-label">' + esc(volLabel) + '</span>' + optionButtons('vol:' + areaId, volOptions, d.vol, false, true) + '</div>' +
-      '<div class="audit-group"><span class="audit-group-label">People working on this</span>' + optionButtons('people:' + areaId, PEOPLE, d.people, false, true) + '</div>';
-    var complete = d.vol && d.people;
-    if (areaId === 'sales') {
-      html += '<div class="audit-group"><span class="audit-group-label">How fast do you usually reply to a new enquiry?</span>' + optionButtons('speed:sales', REPLY_SPEED, d.speed, false, true) + '</div>';
-      complete = complete && d.speed;
+  function peopleScreen() {
+    var html = '<h1 class="audit-title">How many people work in each?</h1><p class="audit-sub">Rough numbers are fine.</p>';
+    var complete = true;
+    state.areas.forEach(function (id) {
+      html += '<div class="audit-group"><span class="audit-group-label">' + esc(areaLabel(id)) + '</span>' + optionButtons('people:' + id, PEOPLE, state.people[id], false, true) + '</div>';
+      if (!state.people[id]) complete = false;
+    });
+    if (state.areas.indexOf('sales') !== -1) {
+      html += '<div class="audit-group"><span class="audit-group-label">How fast does sales usually reply to a new enquiry?</span>' + optionButtons('speed', REPLY_SPEED, state.speed, false, true) + '</div>';
+      if (!state.speed) complete = false;
     }
-    return html + navButtons(true, !!complete);
+    return html + navButtons(true, complete);
   }
 
-  function systemsScreen() {
-    var r = region();
-    return '<h1 class="audit-title">Which systems do you run on?</h1>' +
-      '<p class="audit-sub">So recommendations connect to what you already use.</p>' +
-      '<div class="audit-group"><span class="audit-group-label">Accounting / ERP</span>' + optionButtons('erp', r.erp.map(asOption), state.erp, false, true) + '</div>' +
-      '<div class="audit-group"><span class="audit-group-label">CRM</span>' + optionButtons('crm', r.crm.map(asOption), state.crm, false, true) + '</div>' +
-      navButtons(true, !!(state.erp && state.crm));
+  function pointScreen() {
+    var options = [];
+    state.areas.forEach(function (id) {
+      CATALOGUE.forEach(function (c) {
+        if (c.area === id && c.job && eligible(c)) options.push({ id: c.id, label: c.job, hint: areaLabel(id) });
+      });
+    });
+    return '<h1 class="audit-title">Circle the one job stealing the most hours.</h1>' +
+      '<p class="audit-sub">Just one. The job that repeats the most and wastes the most time or money this week.</p>' +
+      optionButtons('job', options, state.job, false) + navButtons(false);
+  }
+
+  function whyScreen() {
+    var j = jobItem();
+    return '<h1 class="audit-title">Why does it keep happening?</h1>' +
+      '<p class="audit-sub">Ask why, then ask why again. Pick up to 2 reasons for "' + esc(j ? j.job.toLowerCase() : 'this job') + '".</p>' +
+      optionButtons('why', WHY_REASONS, state.why, true) +
+      navButtons(true, state.why.length > 0);
+  }
+
+  function scoreScreen() {
+    var html = '<h1 class="audit-title">Score it. Five yes or no questions.</h1>' +
+      '<p class="audit-sub">Three or more yeses means this job needs AI.</p>';
+    SCORE_QUESTIONS.forEach(function (q, i) {
+      html += '<div class="audit-group audit-score-row"><span class="audit-group-label">' + (i + 1) + '. ' + esc(q) + '</span>' +
+        optionButtons('score:' + i, [{ id: 'y', label: 'Yes' }, { id: 'n', label: 'No' }], state.score[i], false, true) + '</div>';
+    });
+    return html + navButtons(true, state.score.indexOf(null) === -1);
+  }
+
+  function checkScreen() {
+    var j = jobItem();
+    return '<h1 class="audit-title">Put a number on it.</h1>' +
+      '<p class="audit-sub">Roughly how many hours a week does your team spend on "' + esc(j ? j.job.toLowerCase() : 'this job') + '"? Most owners guess low, so round up.</p>' +
+      optionButtons('check', CHECK_HOURS, state.check, false) + navButtons(false);
   }
 
   function moneyScreen() {
@@ -388,6 +492,15 @@
       navButtons(true, !!(state.owed && state.days));
   }
 
+  function systemsScreen() {
+    var r = region();
+    return '<h1 class="audit-title">Which systems do you run on?</h1>' +
+      '<p class="audit-sub">So the recommendations connect to what you already use.</p>' +
+      '<div class="audit-group"><span class="audit-group-label">Accounting / ERP</span>' + optionButtons('erp', r.erp.map(asOption), state.erp, false, true) + '</div>' +
+      '<div class="audit-group"><span class="audit-group-label">CRM</span>' + optionButtons('crm', r.crm.map(asOption), state.crm, false, true) + '</div>' +
+      navButtons(true, !!(state.erp && state.crm));
+  }
+
   function timelineScreen() {
     return '<h1 class="audit-title">Last one. How soon do you want to act?</h1>' +
       '<div class="audit-group"><span class="audit-group-label">Timeline</span>' + optionButtons('timeline', TIMELINE, state.timeline, false, true) + '</div>' +
@@ -395,15 +508,16 @@
       navButtons(true, !!(state.timeline && state.decider), 'See my results →');
   }
 
-  function bindScreen(name) {
+  function bindScreen() {
     app.querySelectorAll('.audit-option').forEach(function (btn) {
-      btn.addEventListener('click', function () { choose(name, btn.dataset.key, btn.dataset.id); });
+      btn.addEventListener('click', function () { choose(btn.dataset.key, btn.dataset.id); });
     });
     app.querySelectorAll('[data-country]').forEach(function (btn) {
       btn.addEventListener('click', function () {
         if (state.country === btn.dataset.country) return;
         state.country = btn.dataset.country;
         state.revenue = null; state.erp = null; state.crm = null; state.owed = null;
+        if (state.job && !eligible(jobItem())) state.job = null;
         render();
       });
     });
@@ -413,26 +527,30 @@
     if (next) next.addEventListener('click', goNext);
   }
 
-  function choose(screenName, key, id) {
+  function toggle(list, id, max) {
+    var i = list.indexOf(id);
+    if (i !== -1) list.splice(i, 1);
+    else if (list.length < max) list.push(id);
+  }
+
+  function choose(key, id) {
     var autoAdvance = false;
     if (key === 'areas') {
-      var i = state.areas.indexOf(id);
-      if (i !== -1) state.areas.splice(i, 1);
-      else if (state.areas.length < 3) state.areas.push(id);
+      toggle(state.areas, id, 3);
       state.areas.sort(function (a, b) { return AREA_ORDER.indexOf(a) - AREA_ORDER.indexOf(b); });
-    } else if (key.indexOf(':') !== -1) {
-      var parts = key.split(':');
-      (state.detail[parts[1]] = state.detail[parts[1]] || {})[parts[0]] = id;
+      if (state.job && state.areas.indexOf(jobItem().area) === -1) state.job = null;
+    } else if (key === 'why') {
+      toggle(state.why, id, 2);
+    } else if (key.indexOf('people:') === 0) {
+      state.people[key.slice(7)] = id;
+    } else if (key.indexOf('score:') === 0) {
+      state.score[+key.slice(6)] = id;
     } else {
       state[key] = id;
-      autoAdvance = ['industry', 'revenue', 'role', 'goal'].indexOf(key) !== -1;
+      autoAdvance = ['industry', 'revenue', 'role', 'job', 'check'].indexOf(key) !== -1;
     }
-    if (autoAdvance) {
-      render();
-      window.setTimeout(goNext, reduceMotion ? 0 : 180);
-    } else {
-      render();
-    }
+    render();
+    if (autoAdvance) window.setTimeout(goNext, reduceMotion ? 0 : 180);
   }
 
   function goNext() {
@@ -456,67 +574,76 @@
     var r = region();
     var rate = state.rate != null ? state.rate : r.rate;
     var borrow = (state.borrow != null ? state.borrow : r.borrow) / 100;
+    var first = jobItem();
+    var verdict = VERDICTS[verdictId()];
     var items = [];
-    var totals = { hoursLow: 0, hoursHigh: 0, timeLow: 0, timeHigh: 0, cashLow: 0, cashHigh: 0 };
 
-    function eligible(item) { return !item.region || item.region === state.country; }
+    // Step 5 (Check): the owner's own number for the job they pointed at, capped at the team's working hours.
+    var checkBand = findById(CHECK_HOURS, state.check) || CHECK_HOURS[0];
+    var capacity = peopleIn(first.area) * 40;
+    var weekLow = Math.min(checkBand.v[0], capacity);
+    var weekHigh = Math.min(checkBand.v[1], capacity);
+    var firstItem = {
+      c: first, area: first.area, people: peopleIn(first.area), isFirst: true,
+      weekLow: weekLow, weekHigh: weekHigh,
+      hoursLow: weekLow * WORKING_WEEKS * verdict.share[0],
+      hoursHigh: weekHigh * WORKING_WEEKS * verdict.share[1],
+      cashLow: 0, cashHigh: 0
+    };
+    items.push(firstItem);
 
+    // Step 6 (Repeat): the rest of each mapped area, valued from team size, minus what the first job already takes.
     state.areas.forEach(function (areaId) {
       var a = AREAS[areaId];
-      var d = state.detail[areaId] || {};
-      var people = (findById(PEOPLE, d.people) || PEOPLE[0]).v;
-      var hoursLow = people * HOURS_PER_PERSON_YEAR * a.share[0];
-      var hoursHigh = people * HOURS_PER_PERSON_YEAR * a.share[1];
-      totals.hoursLow += hoursLow; totals.hoursHigh += hoursHigh;
-      var areaItems = CATALOGUE.filter(function (c) { return c.area === areaId && eligible(c); });
+      var people = peopleIn(areaId);
+      var poolLow = people * HOURS_PER_PERSON_YEAR * a.share[0];
+      var poolHigh = people * HOURS_PER_PERSON_YEAR * a.share[1];
+      if (areaId === first.area) {
+        poolLow = Math.max(0, poolLow - firstItem.hoursLow);
+        poolHigh = Math.max(0, poolHigh - firstItem.hoursHigh);
+      }
+      var rest = CATALOGUE.filter(function (c) { return c.area === areaId && eligible(c) && c.id !== first.id; });
       var savesTime = function (c) { return c.types.indexOf('time') !== -1; };
-      var weightSum = areaItems.filter(savesTime).reduce(function (s, c) { return s + c.w; }, 0);
-      areaItems.forEach(function (c) {
+      var weightSum = rest.filter(savesTime).reduce(function (s, c) { return s + c.w; }, 0);
+      rest.forEach(function (c) {
         var f = savesTime(c) && weightSum ? c.w / weightSum : 0;
-        items.push({ c: c, area: areaId, people: people, hoursLow: hoursLow * f, hoursHigh: hoursHigh * f, cashLow: 0, cashHigh: 0 });
+        items.push({ c: c, area: areaId, people: people, hoursLow: poolLow * f, hoursHigh: poolHigh * f, cashLow: 0, cashHigh: 0 });
       });
     });
 
-    var owedBand = findById(r.owed, state.owed);
+    var owedBand = showsMoney() ? findById(r.owed, state.owed) : null;
     var daysBand = findById(DAYS_TO_PAY, state.days);
-    var owed = owedBand ? owedBand.v : null;
-    if (owed) {
-      var cashLow = owed * daysBand.faster[0] / 365 * borrow;
-      var cashHigh = owed * daysBand.faster[1] / 365 * borrow;
-      totals.cashLow = cashLow; totals.cashHigh = cashHigh;
+    var totals = { cashLow: 0, cashHigh: 0 };
+    if (owedBand && owedBand.v) {
+      totals.cashLow = owedBand.v * daysBand.faster[0] / 365 * borrow;
+      totals.cashHigh = owedBand.v * daysBand.faster[1] / 365 * borrow;
       [['collections', 0.7], ['cash_app', 0.3]].forEach(function (pair) {
         var existing = items.filter(function (x) { return x.c.id === pair[0]; })[0];
         if (!existing) {
-          existing = { c: findById(CATALOGUE, pair[0]), area: 'finance', people: 0, hoursLow: 0, hoursHigh: 0, cashLow: 0, cashHigh: 0, cashOnly: true };
+          existing = { c: findById(CATALOGUE, pair[0]), area: 'finance', people: 0, hoursLow: 0, hoursHigh: 0 };
           items.push(existing);
         }
-        existing.cashLow = cashLow * pair[1];
-        existing.cashHigh = cashHigh * pair[1];
+        existing.cashLow = totals.cashLow * pair[1];
+        existing.cashHigh = totals.cashHigh * pair[1];
       });
     }
 
-    var sales = state.detail.sales;
-    var slowReply = sales && findById(REPLY_SPEED, sales.speed) && findById(REPLY_SPEED, sales.speed).slow;
+    var speed = findById(REPLY_SPEED, state.speed);
+    var slowReply = !!(speed && speed.slow);
 
     items.forEach(function (x) {
       x.timeLow = x.hoursLow * rate;
       x.timeHigh = x.hoursHigh * rate;
-      x.valueLow = x.timeLow + x.cashLow;
-      x.valueHigh = x.timeHigh + x.cashHigh;
-      var score = (x.valueLow + x.valueHigh) / 2;
-      if (x.c.goals.indexOf(state.goal) !== -1) score *= 1.6;
-      if (x.c.id === 'speed_lead' && slowReply) score *= 1.8;
-      if (x.c.types.indexOf('risk') !== -1 && state.goal === 'risk') score *= 1.3;
-      score += x.c.w;
-      x.score = score;
+      x.valueLow = x.timeLow + (x.cashLow || 0);
+      x.valueHigh = x.timeHigh + (x.cashHigh || 0);
+      x.score = (x.valueLow + x.valueHigh) / 2 * (x.c.id === 'speed_lead' && slowReply ? 1.8 : 1) + x.c.w;
     });
-    var valued = items.filter(function (x) { return x.valueHigh > 0; });
-    var avgScore = valued.length ? valued.reduce(function (s, x) { return s + x.score; }, 0) / valued.length : 1;
-    items.forEach(function (x) {
-      if (x.valueHigh === 0 && state.goal === 'risk') x.score = avgScore + x.c.w;
-    });
-    items.sort(function (a, b) { return b.score - a.score; });
+    var rest = items.filter(function (x) { return !x.isFirst; });
+    rest.sort(function (a, b) { return b.score - a.score; });
+    items = [firstItem].concat(rest);
 
+    totals.hoursLow = items.reduce(function (s, x) { return s + x.hoursLow; }, 0);
+    totals.hoursHigh = items.reduce(function (s, x) { return s + x.hoursHigh; }, 0);
     totals.timeLow = totals.hoursLow * rate;
     totals.timeHigh = totals.hoursHigh * rate;
     totals.low = totals.timeLow + totals.cashLow;
@@ -524,7 +651,8 @@
     totals.fteLow = totals.hoursLow / HOURS_PER_PERSON_YEAR;
     totals.fteHigh = totals.hoursHigh / HOURS_PER_PERSON_YEAR;
 
-    return { items: items, totals: totals, rate: rate, borrow: borrow * 100, owedBand: owedBand, daysBand: daysBand, slowReply: slowReply };
+    return { items: items, first: firstItem, verdict: verdict, totals: totals, rate: rate, borrow: borrow * 100,
+      owedBand: owedBand, daysBand: daysBand, slowReply: slowReply, checkBand: checkBand, capacity: capacity };
   }
 
   // ---------- Formatting ----------
@@ -564,6 +692,7 @@
   }
 
   function num(n) { return new Intl.NumberFormat(region().locale).format(Math.round(n)); }
+  function range(a, b) { return num(a) === num(b) ? num(a) : num(a) + '–' + num(b); }
 
   function esc(s) {
     return String(s).replace(/[&<>"']/g, function (ch) {
@@ -578,6 +707,7 @@
   }
 
   function whatOf(c) { return fill((state.country === 'IN' ? c.whatIN : c.whatUS) || c.what); }
+  function lcFirst(s) { return /^[A-Z]{2}/.test(s) ? s : s.charAt(0).toLowerCase() + s.slice(1); }
 
   // ---------- Analysing ----------
 
@@ -585,14 +715,15 @@
     setProgress(1);
     var res = computeResults();
     var steps = [
-      'Reading your answers',
-      'Matching ' + state.areas.length + ' area' + (state.areas.length > 1 ? 's' : '') + ' against ' + CATALOGUE.filter(function (c) { return !c.region || c.region === state.country; }).length + ' automations',
-      'Estimating time from your team sizes'
+      'Mapping ' + state.areas.length + ' area' + (state.areas.length > 1 ? 's' : '') + ' and ' + num(state.areas.reduce(function (s, a) { return s + peopleIn(a); }, 0)) + ' people',
+      'Scoring your first job: ' + scoreCount() + ' of 5',
+      'Checking your number: ' + res.checkBand.label.toLowerCase() + ' a week',
+      'Matching the rest against ' + CATALOGUE.filter(eligible).length + ' automations'
     ];
-    if (res.owedBand && res.owedBand.v) steps.push('Valuing cash tied up with customers');
-    steps.push('Ranking by value for your goal');
+    if (res.totals.cashHigh > 0) steps.push('Valuing cash tied up with customers');
+    steps.push('Ranking your next jobs');
 
-    app.innerHTML = '<section class="audit-screen" tabindex="-1"><h1 class="audit-title">Building your audit…</h1>' +
+    app.innerHTML = '<section class="audit-screen" tabindex="-1"><h1 class="audit-title">Building your Point First Audit…</h1>' +
       '<ul class="audit-analysing">' + steps.map(function (s) { return '<li>' + esc(s) + '</li>'; }).join('') + '</ul></section>';
     focusScreen();
     window.scrollTo(0, 0);
@@ -606,17 +737,41 @@
 
   function summaryBlock(res) {
     var t = res.totals;
-    var rows = '<div><dt>Team time freed each year</dt><dd>' + num(t.hoursLow) + '–' + num(t.hoursHigh) + ' hrs</dd></div>' +
+    var rows = '<div><dt>Team time freed each year</dt><dd>' + range(t.hoursLow, t.hoursHigh) + ' hrs</dd></div>' +
       '<div><dt>Equal to about</dt><dd>' + trim(t.fteLow) + '–' + trim(t.fteHigh) + ' full-time people</dd></div>' +
       '<div><dt>Value of that time</dt><dd>' + moneyRange(t.timeLow, t.timeHigh) + '</dd></div>';
     if (t.cashHigh > 0) rows += '<div><dt>Saved by collecting cash faster</dt><dd>' + moneyRange(t.cashLow, t.cashHigh) + '</dd></div>';
-    var hasRisk = res.items.some(function (x) { return x.c.types.indexOf('risk') !== -1; });
-    if (hasRisk) rows += '<div><dt>Compliance risk</dt><dd>Reduced</dd></div>';
+    if (res.items.some(function (x) { return x.c.types.indexOf('risk') !== -1; })) rows += '<div><dt>Compliance risk</dt><dd>Reduced</dd></div>';
     return '<div class="audit-summary">' +
       '<span class="audit-summary-label">Estimated value each year</span>' +
       '<span class="audit-summary-value">' + moneyRange(t.low, t.high) + '</span>' +
       '<span class="audit-summary-note">' + esc(SEGMENTS[segment()] || '') + ' · ' + esc(state.industry || '') + ' · ' + esc(state.areas.map(areaLabel).join(', ')) + '</span>' +
       '<dl class="audit-breakdown">' + rows + '</dl></div>';
+  }
+
+  function firstJobBlock(res) {
+    var f = res.first;
+    var whyLabels = state.why.map(function (id) { return findById(WHY_REASONS, id).label; });
+    var rows = [
+      ['Map', state.areas.map(function (a) { return areaLabel(a) + ' (' + findById(PEOPLE, state.people[a]).label + ' people)'; }).join(', ')],
+      ['Point', f.c.job],
+      ['Why', whyLabels.join('. ') + '.'],
+      ['Score', scoreCount() + ' of 5 yes'],
+      ['Check', res.checkBand.label + ' a week on this job']
+    ];
+    var value = f.valueHigh > 0 ? moneyRange(f.valueLow, f.valueHigh) + ' / yr' : 'Risk reduction';
+    return '<div class="audit-first">' +
+      '<div class="audit-first-head"><span class="audit-summary-label">Your first job</span>' +
+      '<span class="audit-verdict">' + esc(res.verdict.label) + '</span></div>' +
+      '<h2 class="audit-first-title">' + esc(f.c.job) + '</h2>' +
+      '<p class="audit-first-line">' + esc(res.verdict.line) + '</p>' +
+      '<dl class="audit-first-steps">' + rows.map(function (r) {
+        return '<div><dt>' + r[0] + '</dt><dd>' + esc(r[1]) + '</dd></div>';
+      }).join('') + '</dl>' +
+      '<div class="audit-first-build"><span class="audit-summary-label">What to build</span>' +
+      '<h3>' + esc(fill(f.c.title)) + '</h3><p>' + esc(whatOf(f.c)) + '</p>' +
+      '<div class="audit-first-meta"><span>' + value + '</span><span>Set up in ' + esc(f.c.weeks) + '</span></div></div>' +
+      '</div>';
   }
 
   function tagsFor(x) {
@@ -628,24 +783,21 @@
   function whyFor(x, res) {
     var parts = [];
     if (x.hoursHigh > 0) {
-      var label = areaLabel(x.area);
-      if (!/^[A-Z]{2}/.test(label)) label = label.charAt(0).toLowerCase() + label.slice(1);
-      parts.push('Your ' + label + ' team of about ' + trim(x.people) + ' people spends time on this; we estimate it frees ' + num(x.hoursLow) + '–' + num(x.hoursHigh) + ' hours a year.');
+      parts.push('Your ' + lcFirst(areaLabel(x.area)) + ' team of about ' + trim(x.people) + ' people spends time on this; we estimate it frees ' + range(x.hoursLow, x.hoursHigh) + ' hours a year.');
     }
     if (x.cashHigh > 0) {
       parts.push('With ' + res.owedBand.label.toLowerCase() + ' owed and customers taking ' + res.daysBand.label.toLowerCase() + ' to pay, collecting ' + res.daysBand.faster[0] + '–' + res.daysBand.faster[1] + ' days sooner is worth ' + moneyRange(x.cashLow, x.cashHigh) + ' a year in borrowing costs.');
     }
     if (x.c.id === 'speed_lead' && res.slowReply) {
-      parts.push('You reply ' + findById(REPLY_SPEED, state.detail.sales.speed).label.toLowerCase() + '. Research on thousands of companies found leads contacted within 5 minutes are far more likely to be reached and qualified than after 30.');
+      parts.push('You reply ' + findById(REPLY_SPEED, state.speed).label.toLowerCase() + '. Research across thousands of companies found leads contacted within 5 minutes are far more likely to be reached and qualified than after 30.');
     }
     if (x.c.types.indexOf('risk') !== -1 && x.hoursHigh === 0) parts.push('Its main value is avoiding penalties, lost tax credit or missed deadlines rather than saving hours.');
-    if (x.c.goals.indexOf(state.goal) !== -1) parts.push('Directly supports your main goal: ' + findById(GOALS, state.goal).label.toLowerCase() + '.');
     return parts.join(' ');
   }
 
-  function card(x, i, res, full) {
+  function card(x, n, res, full) {
     var value = x.valueHigh > 0 ? moneyRange(x.valueLow, x.valueHigh) + ' / yr' : 'Risk reduction';
-    return '<article class="audit-card"><div class="audit-card-head"><span class="audit-card-rank">#' + (i + 1) + '</span>' +
+    return '<article class="audit-card"><div class="audit-card-head"><span class="audit-card-rank">Next job ' + n + '</span>' +
       '<span class="audit-card-value">' + value + '</span></div>' +
       '<h3 class="audit-card-title">' + esc(fill(x.c.title)) + '</h3>' +
       '<p>' + esc(whatOf(x.c)) + '</p>' +
@@ -655,26 +807,26 @@
 
   function segmentNote() {
     var s = segment();
-    if (s === 'small') return 'Most of our work is with mid-size and larger companies, but the same automations apply at your size. Start with the top one, and grab Point First, our free guide, to pick it well.';
-    if (s === 'big' || s === 'enterprise') return 'At your size, the fastest path is a pilot in one department: prove the numbers on the #1 automation, then roll out.';
-    return 'Companies your size usually start with the top one or two, see results in weeks, and expand from there.';
+    if (s === 'small') return 'Most of our work is with mid-size and larger companies, but the method works at any size. Start with your first job, and grab the pen-and-paper version of Point First to run it again next month.';
+    if (s === 'big' || s === 'enterprise') return 'At your size, the fastest path is a pilot on your first job in one department: prove the numbers, then roll out.';
+    return 'Companies your size usually fix the first job, see results in weeks, then work down the list.';
   }
 
   function renderResults(full) {
     var res = computeResults();
-    var top = res.items.slice(0, 3);
+    var next = res.items.slice(1);
     var html = '<section class="audit-screen" tabindex="-1">' +
-      '<span class="audit-step">Your automation audit</span>' +
+      '<span class="audit-step">The Point First Audit</span>' +
       '<h1 class="audit-title">' + (full ? 'Your full report' : 'Here\'s what we found') + '</h1>' +
-      summaryBlock(res);
+      summaryBlock(res) + firstJobBlock(res);
 
     if (!full) {
-      html += '<h2 class="audit-section-title">Your top 3 opportunities</h2>' +
-        top.map(function (x, i) { return card(x, i, res, false); }).join('') +
+      html += '<h2 class="audit-section-title">Repeat: your next jobs</h2>' +
+        next.slice(0, 2).map(function (x, i) { return card(x, i + 1, res, false); }).join('') +
         '<div class="audit-locked"><h3>Unlock your full report</h3>' +
         '<p>Free. Opens instantly after you enter your details.</p>' +
         '<ul class="audit-locked-list">' +
-        '<li>All ' + res.items.length + ' automations that fit your business, ranked</li>' +
+        '<li>All ' + next.length + ' next jobs, ranked by value</li>' +
         '<li>The value and setup time of each</li>' +
         '<li>Why each one fits, from your own answers</li>' +
         '<li>The full maths, with assumptions you can change</li>' +
@@ -682,8 +834,8 @@
         '<button type="button" class="btn btn-solid" data-action="unlock">Unlock my full report →</button></div>';
     } else {
       html += '<p class="audit-sub">' + esc(segmentNote()) + '</p>' +
-        '<h2 class="audit-section-title">All ' + res.items.length + ' opportunities, ranked</h2>' +
-        res.items.map(function (x, i) { return card(x, i, res, true); }).join('') +
+        '<h2 class="audit-section-title">Repeat: your next ' + next.length + ' jobs, ranked</h2>' +
+        next.map(function (x, i) { return card(x, i + 1, res, true); }).join('') +
         assumptionsBlock(res) + methodBlock(res) + nextStepsBlock();
     }
     html += '</section>';
@@ -711,27 +863,33 @@
   }
 
   function methodBlock(res) {
-    var items = state.areas.map(function (id) {
+    var f = res.first;
+    var v = res.verdict;
+    var capped = res.checkBand.v[1] > res.capacity ? ' (capped at your team\'s ' + num(res.capacity) + ' working hours a week)' : '';
+    var items = ['<li><strong>Your first job:</strong> ' + esc(res.checkBand.label.toLowerCase()) + ' a week, your number' + capped + ' × ' + WORKING_WEEKS +
+      ' working weeks × ' + Math.round(v.share[0] * 100) + '–' + Math.round(v.share[1] * 100) + '% automated for a "' + esc(v.label) + '" job × ' + money(res.rate) + ' an hour.</li>'];
+    state.areas.forEach(function (id) {
       var a = AREAS[id];
-      var p = (findById(PEOPLE, (state.detail[id] || {}).people) || PEOPLE[0]);
-      return '<li><strong>' + esc(areaLabel(id)) + ':</strong> ' + p.label + ' people (we use ' + trim(p.v) + ') × ' + num(HOURS_PER_PERSON_YEAR) +
-        ' working hours a year × ' + Math.round(a.share[0] * 100) + '–' + Math.round(a.share[1] * 100) + '% of their time automated × ' + money(res.rate) + ' an hour.</li>';
+      var p = findById(PEOPLE, state.people[id]);
+      items.push('<li><strong>Next jobs in ' + esc(lcFirst(areaLabel(id))) + ':</strong> ' + p.label + ' people (we use ' + trim(p.v) + ') × ' + num(HOURS_PER_PERSON_YEAR) +
+        ' working hours a year × ' + Math.round(a.share[0] * 100) + '–' + Math.round(a.share[1] * 100) + '% of their time automated' +
+        (id === f.area ? ', minus the hours your first job already covers' : '') + ', × ' + money(res.rate) + ' an hour.</li>');
     });
     if (res.totals.cashHigh > 0) {
       items.push('<li><strong>Faster collections:</strong> ' + esc(res.owedBand.label) + ' owed (we use ' + money(res.owedBand.v) + ') × ' + res.daysBand.faster[0] + '–' + res.daysBand.faster[1] +
         ' days sooner ÷ 365 × ' + res.borrow + '% cost of borrowing.</li>');
     }
-    items.push('<li><strong>Why these percentages:</strong> McKinsey estimates today\'s technology could automate activities that take up 60–70% of employees\' time. We assume only 15–50%, depending on the area, to stay conservative.</li>');
+    items.push('<li><strong>Why these percentages:</strong> McKinsey estimates today\'s technology could automate activities that take up 60–70% of employees\' time. We assume 15–70% depending on the job and its score, to stay conservative.</li>');
     items.push('<li><strong>Not included:</strong> extra revenue from faster replies, fewer errors, and avoided penalties. These are real but depend on details only a proper review can confirm, so we don\'t put a number on them.</li>');
     return '<h2 class="audit-section-title">How we calculated this</h2><ul class="audit-method">' + items.join('') + '</ul>';
   }
 
   function nextStepsBlock() {
-    return '<div class="audit-next-steps"><h2>Want to see the top one working?</h2>' +
-      '<p>Vansh will walk you through your report and show how the #1 automation would work on your systems. No slides, no pressure.</p>' +
+    return '<div class="audit-next-steps"><h2>Want to see your first job fixed?</h2>' +
+      '<p>Vansh will walk you through this report and show how your first job would work on your own systems. No slides, no pressure.</p>' +
       '<div class="audit-actions">' +
       '<a class="btn btn-solid" href="' + CONTACT_URL + '" target="_blank" rel="noopener">Message Vansh →</a>' +
-      '<a class="btn btn-outline" href="' + POINT_FIRST_URL + '" target="_blank" rel="noopener">Bonus: get the Point First guide</a>' +
+      '<a class="btn btn-outline" href="' + GUIDE_URL + '" target="_blank" rel="noopener">Point First, the pen-and-paper version</a>' +
       '</div></div>' +
       '<button type="button" class="audit-print" data-action="print">Save or print this report</button>';
   }
@@ -762,6 +920,9 @@
   // ---------- Unlock via Tally ----------
 
   function hiddenFields(res) {
+    var f = res.first;
+    var firstJob = 'FIRST: ' + f.c.job + ' (' + res.verdict.label + ', score ' + scoreCount() + '/5, ' + res.checkBand.label.toLowerCase() + '/wk)';
+    var nextJobs = res.items.slice(1, 3).map(function (x) { return fill(x.c.title); }).join(' | ');
     return {
       segment: SEGMENTS[segment()] || '',
       country: region().label,
@@ -770,7 +931,7 @@
       role: state.role || '',
       areas: state.areas.map(areaLabel).join(', '),
       annual_value: moneyRange(res.totals.low, res.totals.high),
-      top_automations: res.items.slice(0, 3).map(function (x) { return fill(x.c.title); }).join(' | '),
+      top_automations: firstJob + ' | NEXT: ' + nextJobs,
       timeline: [(findById(TIMELINE, state.timeline) || {}).label, (findById(DECIDER, state.decider) || {}).label].filter(Boolean).join(' / '),
       source: 'audit-' + utm.source,
       utm_source: utm.utm_source,
@@ -793,7 +954,7 @@
     var q = new URLSearchParams(fields).toString();
     window.open('https://tally.so/r/' + TALLY_FORM_ID + '?' + q, '_blank', 'noopener');
     var box = app.querySelector('.audit-locked');
-    if (box) {
+    if (box && !box.querySelector('[data-action="continue"]')) {
       box.insertAdjacentHTML('beforeend', '<p class="audit-fineprint">The form opened in a new tab. Once you\'ve submitted it, <button type="button" class="audit-print" data-action="continue">show my full report</button>.</p>');
       box.querySelector('[data-action="continue"]').addEventListener('click', unlockReport);
     }

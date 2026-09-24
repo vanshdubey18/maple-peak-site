@@ -320,6 +320,54 @@ a {
   border-bottom: 1px solid var(--color-border-dark);
 }
 
+.method {
+  margin-top: 48px;
+  padding-top: 32px;
+  border-top: 1px solid var(--color-border-dark);
+}
+
+.method-label {
+  font-size: 15px;
+  color: var(--color-muted-dark-section);
+  margin: 0 0 20px;
+}
+
+.method-steps {
+  list-style: none;
+  counter-reset: method;
+  padding: 0;
+  margin: 0 0 32px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 20px 28px;
+}
+
+.method-steps li {
+  counter-increment: method;
+  font-size: 15px;
+  line-height: 1.5;
+  color: var(--color-muted-dark-section);
+}
+
+.method-steps li::before {
+  content: counter(method, decimal-leading-zero);
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  color: var(--color-accent);
+  margin-bottom: 6px;
+}
+
+.method-steps b {
+  display: block;
+  font-family: var(--font-headline);
+  font-size: 22px;
+  font-weight: 400;
+  color: var(--color-paper);
+  margin-bottom: 2px;
+}
+
 /* Services */
 .services {
   background: var(--color-dark);
