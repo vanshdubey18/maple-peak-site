@@ -86,6 +86,7 @@ a {
   font-weight: 500;
   flex-wrap: wrap;
   justify-content: flex-end;
+  align-items: center;
 }
 
 .nav-links a {
@@ -106,6 +107,26 @@ a {
 
 .nav-links a:hover::after {
   width: 100%;
+}
+
+.nav-links .nav-cta {
+  border: 1px solid var(--color-paper);
+  padding: 6px 12px;
+}
+
+.nav-links .nav-cta::after {
+  content: none;
+}
+
+.nav-links .nav-cta:hover {
+  background: var(--color-paper);
+  color: var(--color-dark);
+}
+
+@media (max-width: 640px) {
+  .nav-links:has(.nav-cta) a:not(.nav-cta) {
+    display: none;
+  }
 }
 
 /* Hero */

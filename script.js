@@ -28,8 +28,8 @@
   var utmSource = params.get('utm_source') ||
     (/instagram\./i.test(document.referrer) ? 'instagram' : '');
   var utmCampaign = params.get('utm_campaign') || '';
-  document.querySelectorAll('a[href^="https://tally.so/r/"]').forEach(function (link) {
-    var url = new URL(link.href);
+  document.querySelectorAll('a[href^="https://tally.so/r/"], a[href^="/audit"]').forEach(function (link) {
+    var url = new URL(link.href, window.location.href);
     url.searchParams.set('source', link.dataset.cta || 'site');
     if (utmSource) url.searchParams.set('utm_source', utmSource);
     if (utmCampaign) url.searchParams.set('utm_campaign', utmCampaign);
