@@ -42,10 +42,31 @@
   var costTotal = document.getElementById('costTotal');
   if (costHours && costPeople && costRate && costTotal) {
     var WORKING_WEEKS = 48;
-    var money = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 });
+    var CURRENCIES = {
+      USD: { locale: 'en-US', min: 10, max: 200, step: 5, rate: 35 },
+      INR: { locale: 'en-IN', min: 100, max: 5000, step: 50, rate: 500 }
+    };
+    var currency = 'USD';
+    var money;
     var count = new Intl.NumberFormat('en-US');
     var shownTotal = 0;
     var tweenFrame = null;
+    var currencyButtons = document.querySelectorAll('.cost-currency-btn');
+
+    var applyCurrency = function (code) {
+      CURRENCIES[currency].rate = +costRate.value;
+      currency = code;
+      var config = CURRENCIES[code];
+      money = new Intl.NumberFormat(config.locale, { style: 'currency', currency: code, maximumFractionDigits: 0 });
+      costRate.min = config.min;
+      costRate.max = config.max;
+      costRate.step = config.step;
+      costRate.value = config.rate;
+      currencyButtons.forEach(function (btn) {
+        btn.setAttribute('aria-pressed', String(btn.dataset.currency === code));
+      });
+      shownTotal = +costHours.value * +costPeople.value * WORKING_WEEKS * config.rate;
+    };
 
     var setFill = function (input) {
       var pct = (input.value - input.min) / (input.max - input.min) * 100;
@@ -88,7 +109,18 @@
     [costHours, costPeople, costRate].forEach(function (input) {
       input.addEventListener('input', updateCost);
     });
-    shownTotal = +costHours.value * +costPeople.value * WORKING_WEEKS * +costRate.value;
+    currencyButtons.forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        if (btn.dataset.currency === currency) return;
+        applyCurrency(btn.dataset.currency);
+        updateCost();
+      });
+    });
+
+    var timeZone = '';
+    try { timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone || ''; } catch (e) {}
+    var inIndia = /^Asia\/(Kolkata|Calcutta)$/.test(timeZone) || /-IN$/i.test(navigator.language || '');
+    applyCurrency(inIndia ? 'INR' : 'USD');
     updateCost();
   }
 

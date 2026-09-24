@@ -398,6 +398,34 @@ a {
   gap: 36px;
 }
 
+.cost-currency {
+  display: inline-flex;
+  align-self: flex-start;
+  border: 1px solid var(--color-dark);
+}
+
+.cost-currency-btn {
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  padding: 8px 16px;
+  border: 0;
+  background: transparent;
+  color: var(--color-dark);
+  cursor: pointer;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+.cost-currency-btn + .cost-currency-btn {
+  border-left: 1px solid var(--color-dark);
+}
+
+.cost-currency-btn[aria-pressed="true"] {
+  background: var(--color-dark);
+  color: var(--color-paper);
+}
+
 .cost-label-row {
   display: flex;
   justify-content: space-between;
