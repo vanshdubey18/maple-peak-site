@@ -44,7 +44,7 @@
     var WORKING_WEEKS = 48;
     var CURRENCIES = {
       USD: { locale: 'en-US', min: 10, max: 200, step: 5, rate: 35 },
-      INR: { locale: 'en-IN', min: 100, max: 5000, step: 50, rate: 500 }
+      INR: { locale: 'en-IN', min: 50, max: 2000, step: 10, rate: 150 }
     };
     var currency = 'USD';
     var money;
