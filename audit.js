@@ -5,6 +5,8 @@
   var SAVED_KEY = 'mp-audit-report';
   var GUIDE_URL = 'https://tally.so/r/Me0N8k?source=audit';
   var CONTACT_URL = 'https://instagram.com/vanshdubeyy';
+  var WHATSAPP_NUMBER = '918492888782';
+  var REPORT_URL = 'https://maplepeakai.com/audit.html';
   var HOURS_PER_PERSON_YEAR = 1920;
   var WORKING_WEEKS = 48;
 
@@ -837,7 +839,7 @@
       html += '<p class="audit-sub">' + esc(segmentNote()) + '</p>' +
         '<h2 class="audit-section-title">Repeat: your next ' + next.length + ' jobs, ranked</h2>' +
         next.map(function (x, i) { return card(x, i + 1, res, true); }).join('') +
-        assumptionsBlock(res) + methodBlock(res) + nextStepsBlock();
+        assumptionsBlock(res) + methodBlock(res) + nextStepsBlock(res);
     }
     html += '</section>';
     app.innerHTML = html;
@@ -846,6 +848,8 @@
     var unlock = app.querySelector('[data-action="unlock"]');
     if (unlock) unlock.addEventListener('click', openUnlock);
     bindAssumptions();
+    var share = app.querySelector('[data-action="share"]');
+    if (share) share.addEventListener('click', function () { shareReport(share); });
     var print = app.querySelector('[data-action="print"]');
     if (print) print.addEventListener('click', function () { window.print(); });
     if (!full) window.scrollTo(0, 0);
@@ -885,14 +889,45 @@
     return '<h2 class="audit-section-title">How we calculated this</h2><ul class="audit-method">' + items.join('') + '</ul>';
   }
 
-  function nextStepsBlock() {
+  function reportLink() {
+    return REPORT_URL + '?report=' + packState();
+  }
+
+  function whatsappLink(res) {
+    var f = res.first;
+    var value = f.valueHigh > 0 ? moneyRange(f.valueLow, f.valueHigh) + ' a year' : 'a risk I want to reduce';
+    var text = 'Hi Vansh, I just took the Point First Audit. My first job is "' + f.c.job + '" (' + res.verdict.label + '), worth ' + value +
+      '. Can you walk me through it? My report: ' + reportLink();
+    return 'https://wa.me/' + WHATSAPP_NUMBER + '?text=' + encodeURIComponent(text);
+  }
+
+  function nextStepsBlock(res) {
     return '<div class="audit-next-steps"><h2>Want to see your first job fixed?</h2>' +
       '<p>Vansh will walk you through this report and show how your first job would work on your own systems. No slides, no pressure.</p>' +
       '<div class="audit-actions">' +
-      '<a class="btn btn-solid" href="' + CONTACT_URL + '" target="_blank" rel="noopener">Message Vansh →</a>' +
-      '<a class="btn btn-outline" href="' + GUIDE_URL + '" target="_blank" rel="noopener">Point First, the pen-and-paper version</a>' +
-      '</div></div>' +
+      '<a class="btn btn-solid" href="' + esc(whatsappLink(res)) + '" target="_blank" rel="noopener" data-cta="whatsapp">Discuss this on WhatsApp →</a>' +
+      '<button type="button" class="btn btn-outline" data-action="share">Send this report to a colleague</button>' +
+      '</div>' +
+      '<p class="audit-fineprint">Prefer Instagram? Message <a href="' + CONTACT_URL + '" target="_blank" rel="noopener">@vanshdubeyy</a>. Want the method on paper? <a href="' + GUIDE_URL + '" target="_blank" rel="noopener">Get Point First, the guide version</a>.</p>' +
+      '</div>' +
       '<button type="button" class="audit-print" data-action="print">Save or print this report</button>';
+  }
+
+  function shareReport(btn) {
+    var url = reportLink();
+    var done = function (label) {
+      btn.textContent = label;
+      window.setTimeout(function () { btn.textContent = 'Send this report to a colleague'; }, 2500);
+    };
+    if (navigator.share) {
+      navigator.share({ title: 'Our Point First Audit', text: 'The first job in our company worth automating, and what it is worth.', url: url }).catch(function () {});
+      return;
+    }
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(url).then(function () { done('Link copied. Paste it anywhere.'); }, function () { window.prompt('Copy this link:', url); });
+      return;
+    }
+    window.prompt('Copy this link:', url);
   }
 
   function bindAssumptions() {
@@ -1022,6 +1057,12 @@
     unlocked = true;
     renderResults(true);
   } else {
+    // A tap on the homepage question answers the first Map question, so start past the intro.
+    var area = params.get('area');
+    if (area && AREAS[area]) {
+      state.areas = [area];
+      screenIndex = 1;
+    }
     render();
   }
 })();

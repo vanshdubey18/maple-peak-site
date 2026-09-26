@@ -625,6 +625,19 @@
 
 .audit-actions .btn-outline {
   color: var(--color-paper);
+  background: none;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.audit-next-steps .audit-fineprint {
+  margin: 20px 0 0;
+  color: var(--color-muted-dark-section);
+}
+
+.audit-next-steps .audit-fineprint a {
+  color: var(--color-paper);
+  text-decoration: underline;
 }
 
 .audit-print {

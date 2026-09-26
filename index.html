@@ -48,6 +48,17 @@
     <p class="hero-copy">We sit with you, understand how your operation runs, and give you the AI systems that save you time and money.</p>
     <a href="/audit.html" class="btn btn-outline" data-cta="hero">Take the Point First Audit →</a>
   </div>
+  <div class="hero-start">
+    <p class="hero-start-q" id="heroStartQ">Start here. Where does your team lose the most hours?</p>
+    <div class="hero-chips" role="group" aria-labelledby="heroStartQ">
+      <a href="/audit.html?area=finance" class="hero-chip" data-cta="hero-chip">Finance &amp; accounts</a>
+      <a href="/audit.html?area=sales" class="hero-chip" data-cta="hero-chip">Sales &amp; enquiries</a>
+      <a href="/audit.html?area=orders" class="hero-chip" data-cta="hero-chip">Orders &amp; customer service</a>
+      <a href="/audit.html?area=procurement" class="hero-chip" data-cta="hero-chip">Procurement &amp; vendors</a>
+      <a href="/audit.html?area=dealers" class="hero-chip" data-cta="hero-chip">Dealers &amp; distributors</a>
+      <a href="/audit.html?area=reporting" class="hero-chip" data-cta="hero-chip">Management reporting</a>
+    </div>
+  </div>
   <div class="hero-proof">
     <span>Free</span>
     <span>3 minutes</span>
@@ -150,10 +161,41 @@
   </div>
 </section>
 
+<section id="demo" class="demo">
+  <div class="demo-inner">
+    <span class="eyebrow reveal">04 — Watch it work</span>
+    <h2 class="section-headline reveal">See a repetitive job disappear.</h2>
+    <p class="body-copy reveal">Pick a job. Watch the system read it, pull out what matters, and do the work your team does by hand today.</p>
+    <div class="demo-panel reveal" id="demoPanel">
+      <div class="demo-tabs" role="group" aria-label="Choose a job">
+        <button type="button" class="demo-tab" data-demo="order" aria-pressed="true">Customer order email</button>
+        <button type="button" class="demo-tab" data-demo="invoice" aria-pressed="false">Supplier invoice</button>
+        <button type="button" class="demo-tab" data-demo="payment" aria-pressed="false">Overdue payment</button>
+      </div>
+      <div class="demo-body">
+        <div class="demo-pane">
+          <span class="demo-pane-label">What arrives</span>
+          <div class="demo-source" id="demoSource"></div>
+        </div>
+        <div class="demo-pane demo-pane-out">
+          <span class="demo-pane-label">What the system does</span>
+          <dl class="demo-fields" id="demoFields" aria-live="polite"></dl>
+          <div class="demo-result" id="demoResult" hidden></div>
+        </div>
+      </div>
+      <div class="demo-foot">
+        <div class="demo-times" id="demoTimes"></div>
+        <button type="button" class="btn btn-solid demo-run" id="demoRun">Run it again</button>
+      </div>
+    </div>
+    <p class="demo-note">Sample documents from a made-up company. Real builds run on your own inbox and systems.</p>
+  </div>
+</section>
+
 <section id="cost" class="cost">
   <div class="cost-inner">
     <div class="cost-intro">
-      <span class="eyebrow reveal">04 — The cost of doing nothing</span>
+      <span class="eyebrow reveal">05 — The cost of doing nothing</span>
       <h2 class="section-headline reveal">What is repetitive work costing you?</h2>
       <p class="body-copy reveal">Move the sliders to match your team. Nothing is sent anywhere — it's your numbers, your answer.</p>
     </div>
@@ -197,7 +239,7 @@
 </section>
 
 <section id="faq" class="faq">
-  <span class="eyebrow reveal">05 — FAQ</span>
+  <span class="eyebrow reveal">06 — FAQ</span>
   <h2 class="section-headline reveal">Before you ask.</h2>
   <div class="faq-list">
     <div class="faq-item reveal">
@@ -220,12 +262,12 @@
 </section>
 
 <section id="contact" class="contact">
-  <span class="eyebrow reveal">06 — Contact</span>
+  <span class="eyebrow reveal">07 — Contact</span>
   <h2 class="section-headline reveal">You're losing time and money by not using AI in your operation.</h2>
   <p class="body-copy contact-copy reveal">The Point First Audit takes three minutes. Find the first job in your company worth automating, what it's worth each year, and the maths behind every number.</p>
   <a href="/audit.html" class="btn btn-solid reveal" data-cta="contact">Take the Point First Audit →</a>
   <p class="secondary-line">Prefer pen and paper? Get <a href="https://tally.so/r/Me0N8k" target="_blank" rel="noopener" class="underline-link" data-cta="pointfirst">Point First, the guide version</a>.</p>
-  <p class="secondary-line">Prefer to talk first? Message <a href="https://instagram.com/vanshdubeyy" target="_blank" rel="noopener" class="underline-link">@vanshdubeyy</a> on Instagram.</p>
+  <p class="secondary-line">Prefer to talk first? <a href="https://wa.me/918492888782?text=Hi%20Vansh%2C%20I%20found%20Maple%20Peak%20and%20want%20to%20talk%20about%20automating%20part%20of%20our%20operation." target="_blank" rel="noopener" class="underline-link" data-cta="whatsapp">WhatsApp Vansh</a> or message <a href="https://instagram.com/vanshdubeyy" target="_blank" rel="noopener" class="underline-link">@vanshdubeyy</a> on Instagram.</p>
 </section>
 
 <footer class="site-footer">
@@ -238,6 +280,7 @@
 </div>
 
 <script src="script.js" defer></script>
+<script src="demo.js" defer></script>
 <script defer src="/_vercel/insights/script.js"></script>
 </body>
 </html>
